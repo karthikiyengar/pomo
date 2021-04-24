@@ -1,0 +1,12 @@
+[package]
+name = "pomo"
+version = "0.1.0"
+authors = ["Karthik Iyengar <hello@kiyengar.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+iced = { version = "0.3", features = ["tokio"] }
+chrono = "0.4"
+rodio = "0.13.1"
