@@ -4,7 +4,6 @@ mkShell rec {
   name = "shell";
   nativeBuildInputs = [ pkgconfig gdb ];
   buildInputs = [
-    openssl
     freetype
     expat
     vulkan-loader
@@ -14,6 +13,8 @@ mkShell rec {
     alsaLib
     libxkbcommon
     swiftshader
+    openssl
+    git
   ] ++ (with xorg; [
     libX11
     libXcursor
