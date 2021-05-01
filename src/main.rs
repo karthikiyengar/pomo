@@ -1,17 +1,19 @@
-mod utils;
-
-use iced::time;
+mod lib;
 use iced::{
-    button, executor, Align, Application, Button, Column, Command, Element, Row, Settings,
-    Subscription, Text,
+    button, executor, text_input, time, Align, Application, Button, Column, Command, Element, Row,
+    Settings, Subscription, Text, TextInput,
 };
+use lib::format::{get_formatted_duration, play_audio};
 use std::time::Duration;
-use utils::format::{get_formatted_duration, play_audio};
 
-const POMODORO_SECONDS: u32 = 5; //25 * 60;
+const POMODORO_SECONDS: u32 = 25 * 60;
 
 pub fn main() -> iced::Result {
     Pomo::run(Settings::default())
+}
+
+struct Task {
+    description: String,
 }
 
 #[derive(Default)]
@@ -19,13 +21,17 @@ struct Pomo {
     value: u32,
     toggle_button: button::State,
     stop_button: button::State,
+    task: text_input::State,
+    task_value: String,
+    entries: Vec<Task>,
     is_running: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum Message {
     Tick,
     Toggle,
+    InputChanged(String),
     Stop,
 }
 
@@ -40,7 +46,10 @@ impl Application for Pomo {
                 value: POMODORO_SECONDS,
                 toggle_button: button::State::new(),
                 stop_button: button::State::new(),
-                is_running: true,
+                task: text_input::State::new(),
+                task_value: String::from(""),
+                entries: vec![],
+                is_running: false,
             },
             Command::none(),
         )
@@ -61,8 +70,8 @@ impl Application for Pomo {
                     self.value -= 1;
                 }
                 if self.value == 0 {
-                    self.is_running = false;
-                    play_audio(String::from("../assets/beep.wav"));
+                    play_audio(String::from("assets/beep.wav"));
+                    self.update(Message::Stop, _clipboard);
                 }
             }
             Message::Toggle => {
@@ -71,9 +80,13 @@ impl Application for Pomo {
             Message::Stop => {
                 self.is_running = false;
                 self.value = POMODORO_SECONDS;
+                self.entries.push(Task {
+                    description: self.task_value.clone(),
+                });
+                self.task_value = String::from("");
             }
+            Message::InputChanged(changed) => self.task_value = changed,
         }
-
         Command::none()
     }
 
@@ -95,10 +108,23 @@ impl Application for Pomo {
         let button_stop =
             Button::new(&mut self.stop_button, Text::new("Stop")).on_press(Message::Stop);
 
+        let text_input = TextInput::new(
+            &mut self.task,
+            "What are you working on?",
+            &self.task_value,
+            Message::InputChanged,
+        );
+
+        let entries_row: Column<Message> =
+            self.entries.iter_mut().fold(Column::new(), |row, entry| {
+                row.push(Text::new(&entry.description))
+            });
+
         let actions_row = Row::new()
             .padding(20)
             .spacing(20)
             .align_items(Align::Center)
+            .push(text_input)
             .push(button_toggle)
             .push(button_stop);
 
@@ -107,6 +133,7 @@ impl Application for Pomo {
             .align_items(Align::Center)
             .push(Text::new(get_formatted_duration(self.value)).size(50))
             .push(actions_row)
+            .push(entries_row)
             .into()
     }
 }

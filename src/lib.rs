@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub mod format {
     use std::io::BufReader;
 
