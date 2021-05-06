@@ -4,11 +4,17 @@ use iced::{
     Settings, Subscription, Text, TextInput,
 };
 use lib::format::{get_formatted_duration, play_audio};
+use libnotify;
 use std::time::Duration;
 
 const POMODORO_SECONDS: u32 = 25 * 60;
 
 pub fn main() -> iced::Result {
+    match libnotify::init("pomo") {
+        Err(e) => eprintln!("Error initialzing libnotify: {:?}", e),
+        _ => println!("libnotify intitialized"),
+    };
+
     Pomo::run(Settings::default())
 }
 
@@ -70,6 +76,16 @@ impl Application for Pomo {
                     self.value -= 1;
                 }
                 if self.value == 0 {
+                    let n = libnotify::Notification::new(
+                        "Pomodoro Completed",
+                        Some("Take a short break and get right back at it!"),
+                        None,
+                    );
+                    match n.show() {
+                        Err(e) => eprintln!("Error showing message: {:#}", e),
+                        _ => (),
+                    }
+
                     play_audio(String::from("assets/beep.wav"));
                     self.update(Message::Stop, _clipboard);
                 }

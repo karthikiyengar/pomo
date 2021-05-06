@@ -13,6 +13,7 @@ mkShell rec {
     alsaLib
     libxkbcommon
     swiftshader
+    libnotify
     openssl
     git
   ] ++ (with xorg; [
